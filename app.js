@@ -375,8 +375,22 @@ async function encodeState(st) {
   const json = JSON.stringify({ n: st.name, i: st.items.map((x) => (x.t || x.a ? [x.t, x.a] : 0)) });
   return b64url(await pipe(new TextEncoder().encode(json), new CompressionStream("deflate-raw")));
 }
+// 共有URLは他人が作れるので、展開後の大きさに上限を置く（正規の30件は最大でも約30KB）
+const SHARE_MAX_CODE = 32768, SHARE_MAX_BYTES = 65536;
+async function inflateCapped(bytes) {
+  const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+  const out = new Uint8Array(SHARE_MAX_BYTES);
+  let n = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return out.subarray(0, n);
+    if (n + value.length > SHARE_MAX_BYTES) { reader.cancel().catch(() => {}); throw new Error("too large"); }
+    out.set(value, n); n += value.length;
+  }
+}
 async function decodeState(code) {
-  const d = JSON.parse(new TextDecoder().decode(await pipe(unb64url(code), new DecompressionStream("deflate-raw"))));
+  if (code.length > SHARE_MAX_CODE) throw new Error("too long");
+  const d = JSON.parse(new TextDecoder().decode(await inflateCapped(unb64url(code))));
   const b = blank();
   b.name = String(d.n || "").slice(0, 30);
   (d.i || []).slice(0, 30).forEach((x, k) => {
