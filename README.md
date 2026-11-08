@@ -31,7 +31,13 @@ python3 -I tools/build_isfdb.py backup-MySQL-55-YYYY-MM-DD data/isfdb.json
 
 `#d=` のあとに、[題, 作者] の一覧と選者名を JSON → deflate-raw → base64url で詰める。サーバーには何も送らない。
 
-## 出典・ライセンス
+## ライセンス
+
+コード（index.html / style.css / app.js / tools/）は MIT ライセンス（LICENSE を参照）。改変・再配布・商用利用は自由で、著作権表示とライセンス文を残すことだけが条件。
+
+data/ の中身は MIT の対象外で、下の各出典の条件に従う。特に data/isfdb.json は ISFDB の CC BY 4.0 なので、再配布するときも出典の表示が要る。
+
+## 出典
 
 - 青空文庫 作品一覧
 - ISFDB（https://www.isfdb.org/）CC BY 4.0。サイト下部に表示している
